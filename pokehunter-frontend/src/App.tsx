@@ -12,6 +12,7 @@ type Response = {
   city: string;
   temp: number;
   weather: string;
+  isRaining: boolean;
   type: string;
   pokemon: Pokemon;
 };
@@ -33,7 +34,7 @@ export default function App() {
   async function getPokemonByCity() {
   try {
     const response = await axios.get(`http://localhost:3001/cities/pokemon/${city}`);
-    
+
     setResponse(response.data);
 
     // Atualiza histórico, adicionando o novo resultado com data/hora atual
@@ -77,6 +78,7 @@ export default function App() {
           <p><strong>Cidade:</strong> {response.city}</p>
           <p><strong>Temperatura:</strong> {response.temp}°C</p>
           <p><strong>Clima:</strong> {response.weather}</p>
+          <p><strong>Está chovendo? </strong> {response.isRaining ? 'Sim ☔' : 'Não ☀️'} </p>
           <p><strong>Tipo do Pokémon:</strong> {response.pokemon.type}</p>
           <div className="pokemon-box">
             <img src={response.pokemon.image} alt={response.pokemon.name} />

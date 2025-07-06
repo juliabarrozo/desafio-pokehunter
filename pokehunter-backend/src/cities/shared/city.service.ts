@@ -23,14 +23,16 @@ export class CityService {
         const response = await lastValueFrom(this.httpService.get(address));
         const data = response.data;
         const temp = data.main.temp;
-        const weather = data.weather[0].main;
+        const weather = data.weather[0].main.toLowerCase();
+        const isRaining = ['rain', 'thunderstorm', 'drizzle'].includes(weather);
 
         let type: string;
-        if (weather.toLowerCase() === 'rain') {
+        if (isRaining) {
         type = 'electric';
         } else {
         type = this.setPokemonType(temp);
         }
+
 
         const pokemon = await this.pokemonService.getByType(type);
 
@@ -38,6 +40,7 @@ export class CityService {
         name: city,
         temp,
         weather,
+        isRaining,
         typePokemon: type,
         pokemon: {
             id: pokemon._id?.toString(),
@@ -53,6 +56,7 @@ export class CityService {
         city,
         temp,
         weather,
+        isRaining,
         typePokemon: type,
         pokemon,
         };
