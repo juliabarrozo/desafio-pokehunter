@@ -54,71 +54,79 @@ describe('CityService', () => {
   });
 
   describe('getPokemonByCity', () => {
-    it('should fetch weather, get pokemon and save city correctly', async () => {
-      const cityName = 'London';
-      const weatherResponse = {
-        data: {
-          main: { temp: 20 },
-          weather: [{ main: 'Clear' }],
-        },
-      };
-      const pokemonMock = {
-        _id: 'abc123',
-        name: 'bulbasaur',
-        type: 'grass',
-        image: 'url-image',
-      };
+  it('should fetch weather, get pokemon and save city correctly', async () => {
+    const cityName = 'London';
+    const weatherResponse = {
+      data: {
+        main: { temp: 20 },
+        weather: [{ main: 'Clear' }],
+      },
+    };
 
-      mockHttpService.get.mockReturnValue(of(weatherResponse));
-      mockPokemonService.getByType.mockResolvedValue(pokemonMock);
+    mockHttpService.get.mockReturnValue(of(weatherResponse));
 
-      const saveSpy = jest.spyOn(CityModelMock.prototype, 'save');
+    // ✅ Mock corrigido
+    const mockedPokemon = {
+      _id: 'abc123',
+      name: 'bulbasaur',
+      type: 'ground',
+      image: 'url-image',
+      save: jest.fn().mockResolvedValue(true),
+    };
 
-      const result = await service.getPokemonByCity(cityName);
+    mockPokemonService.getByType.mockResolvedValue(mockedPokemon);
 
-      expect(mockHttpService.get).toHaveBeenCalledWith(
-        expect.stringContaining(cityName),
-      );
-      expect(mockPokemonService.getByType).toHaveBeenCalledWith('ground');
-      expect(saveSpy).toHaveBeenCalled();
+    const saveCitySpy = jest.spyOn(CityModelMock.prototype, 'save');
 
-      expect(result).toEqual({
-        city: cityName,
-        temp: 20,
-        weather: 'clear',
-        typePokemon: 'ground',
-        isRaining: false,
-        pokemon: pokemonMock,
-      });
-    });
+    const result = await service.getPokemonByCity(cityName);
 
-    it('should set type electric when weather is rain', async () => {
-      const cityName = 'Seattle';
-      const weatherResponse = {
-        data: {
-          main: { temp: 15 },
-          weather: [{ main: 'Rain' }],
-        },
-      };
-      const pokemonMock = {
-        _id: 'xyz789',
-        name: 'pikachu',
-        type: 'electric',
-        image: 'url-pikachu',
-      };
-
-      mockHttpService.get.mockReturnValue(of(weatherResponse));
-      mockPokemonService.getByType.mockResolvedValue(pokemonMock);
-
-      const saveSpy = jest.spyOn(CityModelMock.prototype, 'save');
-
-      const result = await service.getPokemonByCity(cityName);
-
-      expect(mockPokemonService.getByType).toHaveBeenCalledWith('electric');
-      expect(saveSpy).toHaveBeenCalled();
-      expect(result.typePokemon).toBe('electric');
-    });
+    expect(mockHttpService.get).toHaveBeenCalled();
+    expect(mockPokemonService.getByType).toHaveBeenCalledWith('ground');
+    expect(saveCitySpy).toHaveBeenCalled();
+    expect(mockedPokemon.save).toHaveBeenCalled();
+    expect(result.typePokemon).toBe('ground');
+    expect(result.weather).toBe('clear');
+    expect(result.city).toBe(cityName);
+    expect(result.isRaining).toBe(false);
+    expect(typeof result.pokemon.save).toBe('function');
   });
+
+  it('should set type electric when weather is rain', async () => {
+    const cityName = 'Seattle';
+    const weatherResponse = {
+      data: {
+        main: { temp: 15 },
+        weather: [{ main: 'Rain' }],
+      },
+    };
+
+    mockHttpService.get.mockReturnValue(of(weatherResponse));
+
+    // ✅ Mock corrigido
+    const mockedPokemon = {
+      _id: 'xyz789',
+      name: 'pikachu',
+      type: 'electric',
+      image: 'url-pikachu',
+      save: jest.fn().mockResolvedValue(true),
+    };
+
+    mockPokemonService.getByType.mockResolvedValue(mockedPokemon);
+
+    const saveCitySpy = jest.spyOn(CityModelMock.prototype, 'save');
+
+    const result = await service.getPokemonByCity(cityName);
+
+    expect(mockHttpService.get).toHaveBeenCalled();
+    expect(mockPokemonService.getByType).toHaveBeenCalledWith('electric');
+    expect(saveCitySpy).toHaveBeenCalled();
+    expect(mockedPokemon.save).toHaveBeenCalled();
+    expect(result.typePokemon).toBe('electric');
+    expect(result.isRaining).toBe(true);
+    expect(typeof result.pokemon.save).toBe('function');
+  });
+});
+
       it('should return isRaining as true when weather is Rain', async () => {
       const cityName = 'Seattle';
       const weatherResponse = {

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsUrl } from 'class-validator';
+import { IsString, IsNotEmpty, IsUrl, IsMongoId } from 'class-validator';
 
 export class CreatePokemonDto {
   @IsString()
@@ -13,4 +13,8 @@ export class CreatePokemonDto {
   @IsNotEmpty()
   @IsUrl()
   image: string;  // garante que seja uma URL válida
+
+  @IsMongoId()
+  @IsNotEmpty()
+  city: string;
 }

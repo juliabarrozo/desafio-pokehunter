@@ -6,7 +6,7 @@ export const CitySchema = new mongoose.Schema({
     weather: String,
     tipoPokemon: String,
     pokemon: {
-        id: String,
-        nome: String,
-    },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Pokemon',  // referenciando pelo ID
+  },
 }, { timestamps: true });

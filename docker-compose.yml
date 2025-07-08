@@ -1,0 +1,54 @@
+# /pokehunter_fullstack/docker-compose.yml
+
+version: '3.8'
+
+services:
+  # Serviço do Banco de Dados MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: pokehunter_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    networks:
+      - pokehunter-network # <--- ESTÁ USANDO ESTA REDE
+
+  # Serviço do Backend NestJS
+  backend:
+    build:
+      context: ./pokehunter-backend
+      dockerfile: Dockerfile
+    container_name: pokehunter_backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/pokehunter_db?authSource=admin
+      PORT: 3000
+    depends_on:
+      - mongodb
+    volumes:
+      - ./pokehunter-backend:/app
+      - /app/node_modules
+    networks:
+      - pokehunter-network # <--- ESTÁ USANDO ESTA REDE
+    command: npm run start
+
+  # Serviço do Frontend React
+  frontend:
+    build:
+      context: ./pokehunter-frontend
+      dockerfile: Dockerfile
+    container_name: pokehunter_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pokehunter-network # <--- ESTÁ USANDO ESTA REDE
+networks:
+  pokehunter-network:
+    driver: bridge # O driver bridge é o padrão e geralmente suficiente

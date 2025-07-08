@@ -33,7 +33,7 @@ export default function App() {
 
   async function getPokemonByCity() {
   try {
-    const response = await axios.get(`http://localhost:3001/cities/pokemon/${city}`);
+    const response = await axios.get(`http://localhost:3000/cities/pokemon/${city}`);
 
     setResponse(response.data);
 

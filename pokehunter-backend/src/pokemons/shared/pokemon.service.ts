@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Pokemon } from './pokemon';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -14,16 +14,16 @@ export class PokemonService {
         private readonly httpService: HttpService,
 ) {};
     
-    async getByType(type: string): Promise<Pokemon> {
+    async getPokemonByType(type: string): Promise<Pokemon> {
     const existente = await this.pokemonModel.findOne({ type: type }).exec();
     if (existente) {
       return existente;
     }
 
     // Se não achou, busca na PokéAPI
-    const urlType = `https://pokeapi.co/api/v2/type/${type}`;
-    const responseType: any = await lastValueFrom(this.httpService.get(urlType));
-    const pokemonsList = responseType.data.pokemon;
+    const url = `https://pokeapi.co/api/v2/type/${type}`;
+    const response: any = await lastValueFrom(this.httpService.get(url));
+    const pokemonsList = response.data.pokemon;
 
     if (! pokemonsList || pokemonsList.length === 0) {
       throw new NotFoundException(`Nenhum Pokémon do tipo ${type} encontrado na PokéAPI`);
@@ -34,18 +34,22 @@ export class PokemonService {
     const pokemon = pokemonsList[randomIndex].pokemon.name;
 
     // Agora busca os dados detalhados do Pokémon (com sprite, por exemplo)
-    const urlName = `https://pokeapi.co/api/v2/pokemon/${pokemon}`;
-    const responseName: any = await lastValueFrom(this.httpService.get(urlName));
-    const pokemonData = responseName.data;
+    const urlPokemon = `https://pokeapi.co/api/v2/pokemon/${pokemon}`;
+    const responsePokemon: any = await lastValueFrom(this.httpService.get(urlPokemon));
+    const pokemonData = responsePokemon.data;
+    const name = pokemonData.name;
+    const pokemonType = pokemonData.types[0]?.type?.name;
+    const image = pokemonData.sprites.front_default;
 
     const newPokemon = new this.pokemonModel({
-      name: pokemonData.name,
-      type: pokemonData.types[0]?.type?.name,
-      image: pokemonData.sprites.front_default, // ou outra sprite
+      name,
+      type: pokemonType,
+      image,
     });
 
+    console.log('Salvando Pokémon:', newPokemon);
     await newPokemon.save();
-
+    console.log('Pokémon salvo com sucesso:', newPokemon);
     return newPokemon;
     }   
     

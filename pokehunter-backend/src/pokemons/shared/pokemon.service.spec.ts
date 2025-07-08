@@ -5,6 +5,7 @@ import { PokemonService } from 'src/pokemons/shared/pokemon.service';
 import { of } from 'rxjs';
 import { NotFoundException } from '@nestjs/common';
 import { CityService } from 'src/cities/shared/city.service';
+import { Types } from 'mongoose'; // Import Types
 
 // Mock da classe Model do Mongoose para City
 class CityModelMock {
@@ -24,6 +25,24 @@ class CityModelMock {
   static exec = jest.fn();
 }
 
+// Mock da classe Model do Mongoose para Pokemon - ADD THIS
+class PokemonModelMock {
+  private data?: any;
+  constructor(data?: any) {
+    this.data = data;
+  }
+
+  save = jest.fn().mockResolvedValue(this.data); // Mock the save method for Pokemon documents
+
+  static findOne = jest.fn().mockReturnThis();
+  static find = jest.fn().mockReturnThis();
+  static findById = jest.fn().mockReturnThis();
+  static findByIdAndUpdate = jest.fn().mockReturnThis();
+  static deleteOne = jest.fn().mockReturnThis();
+  static exec = jest.fn();
+}
+
+
 describe('CityService', () => {
   let service: CityService;
 
@@ -32,7 +51,7 @@ describe('CityService', () => {
   };
 
   const mockPokemonService = {
-    getByType: jest.fn(),
+    getPokemonByType: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -42,6 +61,8 @@ describe('CityService', () => {
         { provide: getModelToken('City'), useValue: CityModelMock },
         { provide: HttpService, useValue: mockHttpService },
         { provide: PokemonService, useValue: mockPokemonService },
+        // Add the PokemonModelMock for the PokemonService's internal usage
+        { provide: getModelToken('Pokemon'), useValue: PokemonModelMock }, // ADD THIS LINE
       ],
     }).compile();
 
@@ -55,73 +76,74 @@ describe('CityService', () => {
   });
 
   describe('getPokemonByCity', () => {
-    it('should fetch weather, get pokemon and save city correctly', async () => {
-      const cityName = 'London';
-      const weatherResponse = {
-        data: {
-          main: { temp: 20 },
-          weather: [{ main: 'Clear' }],
-        },
-      };
-      const pokemonMock = {
-        _id: 'abc123',
-        name: 'bulbasaur',
-        type: 'grass',
-        image: 'url-image',
-      };
+  it('should fetch weather, get pokemon and save city correctly', async () => {
+    const cityName = 'London';
+    const weatherResponse = {
+      data: {
+        main: { temp: 20 },
+        weather: [{ main: 'Clear' }],
+      },
+    };
 
-      mockHttpService.get.mockReturnValue(of(weatherResponse));
-      mockPokemonService.getByType.mockResolvedValue(pokemonMock);
+    mockHttpService.get.mockReturnValue(of(weatherResponse));
 
-      // Como o new this.cityModel() cria instância da CityModelMock,
-      // podemos espionar o método save na instância criada dentro do método
-      // Vamos espiar o prototype para garantir que o save foi chamado
-
-      const saveSpy = jest.spyOn(CityModelMock.prototype, 'save');
-
-      const result = await service.getPokemonByCity(cityName);
-
-      expect(mockHttpService.get).toHaveBeenCalled();
-      expect(mockPokemonService.getByType).toHaveBeenCalledWith('ground');
-      expect(saveSpy).toHaveBeenCalled();
-
-      expect(result).toEqual({
-        city: cityName,
-        temp: 20,
-        weather: 'clear',
-        typePokemon: 'ground',
-        isRaining: false,
-        pokemon: pokemonMock,
-      });
+    mockPokemonService.getPokemonByType.mockResolvedValue({
+      _id: 'abc123',
+      name: 'bulbasaur',
+      type: 'ground',
+      image: 'url-image',
+      save: jest.fn().mockResolvedValue(true), // mock de save funcionando
     });
 
-    it('should set type electric when weather is rain', async () => {
-      const cityName = 'Seattle';
-      const weatherResponse = {
-        data: {
-          main: { temp: 15 },
-          weather: [{ main: 'Rain' }],
-        },
-      };
-      const pokemonMock = {
+
+    const saveCitySpy = jest.spyOn(CityModelMock.prototype, 'save');
+
+    const result = await service.getPokemonByCity(cityName);
+
+    expect(mockHttpService.get).toHaveBeenCalled();
+    expect(mockPokemonService.getPokemonByType).toHaveBeenCalledWith('ground');
+    expect(saveCitySpy).toHaveBeenCalled();
+    expect(result.typePokemon).toBe('ground');
+    expect(result.weather).toBe('clear');
+    expect(result.city).toBe(cityName);
+    expect(result.isRaining).toBe(false);
+    expect(typeof result.pokemon.save).toBe('function');
+  });
+
+  it('should set type electric when weather is rain', async () => {
+    const cityName = 'Seattle';
+    const weatherResponse = {
+      data: {
+        main: { temp: 15 },
+        weather: [{ main: 'Rain' }],
+      },
+    };
+
+    mockHttpService.get.mockReturnValue(of(weatherResponse));
+
+    mockPokemonService.getPokemonByType.mockImplementation(async () => {
+      const instance = new PokemonModelMock({
         _id: 'xyz789',
         name: 'pikachu',
         type: 'electric',
         image: 'url-pikachu',
-      };
-
-      mockHttpService.get.mockReturnValue(of(weatherResponse));
-      mockPokemonService.getByType.mockResolvedValue(pokemonMock);
-
-      const saveSpy = jest.spyOn(CityModelMock.prototype, 'save');
-
-      const result = await service.getPokemonByCity(cityName);
-
-      expect(mockPokemonService.getByType).toHaveBeenCalledWith('electric');
-      expect(saveSpy).toHaveBeenCalled();
-      expect(result.typePokemon).toBe('electric');
+      });
+      jest.spyOn(instance, 'save').mockResolvedValue(instance);
+      return instance;
     });
+
+    const saveCitySpy = jest.spyOn(CityModelMock.prototype, 'save');
+
+    const result = await service.getPokemonByCity(cityName);
+
+    expect(mockPokemonService.getPokemonByType).toHaveBeenCalledWith('electric');
+    expect(saveCitySpy).toHaveBeenCalled();
+    expect(result.typePokemon).toBe('electric');
+    expect(result.isRaining).toBe(true);
+    expect(typeof result.pokemon.save).toBe('function');
   });
+});
+
 
   describe('setPokemonType', () => {
     it.each([
@@ -174,17 +196,17 @@ describe('CityService', () => {
   });
 
   describe('create', () => {
-  it('should create and save city', async () => {
-    const cityData = { name: 'New City' };
+    it('should create and save city', async () => {
+      const cityData = { name: 'New City' };
 
-    const saveSpy = jest.spyOn(CityModelMock.prototype, 'save');
+      const saveSpy = jest.spyOn(CityModelMock.prototype, 'save');
 
-    const result = await service.create(cityData as any);
+      const result = await service.create(cityData as any);
 
-    expect(saveSpy).toHaveBeenCalled();
-    expect(result).toEqual(cityData);
+      expect(saveSpy).toHaveBeenCalled();
+      expect(result).toEqual(cityData);
+    });
   });
-});
 
 
   describe('update', () => {

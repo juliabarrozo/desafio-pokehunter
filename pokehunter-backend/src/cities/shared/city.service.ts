@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { City } from './city';
 import { HttpService } from '@nestjs/axios';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { PokemonService } from 'src/pokemons/shared/pokemon.service';
 import { Pokemon } from 'src/pokemons/shared/pokemon'
@@ -34,23 +34,22 @@ export class CityService {
         }
 
 
-        const pokemon = await this.pokemonService.getByType(type);
+        const pokemon = await this.pokemonService.getPokemonByType(type);
 
-        const novaCidade = new this.cityModel({
+        const newCity = await new this.cityModel({
         name: city,
         temp,
         weather,
         isRaining,
         typePokemon: type,
-        pokemon: {
-            id: pokemon._id?.toString(),
-            name: pokemon.name,
-            type: pokemon.type,
-            image: pokemon.image
-        },
-        });
+        pokemon: pokemon._id as Types.ObjectId,
+        })
+        await newCity.save();
 
-        await novaCidade.save();
+        pokemon.city = newCity._id as Types.ObjectId;
+
+        await pokemon.save();
+
 
         return {
         city,
