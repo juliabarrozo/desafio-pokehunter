@@ -1,5 +1,5 @@
 # Etapa 1: build
-FROM node:18-alpine AS builder
+FROM node:22.17.0 AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -7,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # Etapa 2: produção
-FROM node:18-alpine
+FROM node:22.17.0
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./

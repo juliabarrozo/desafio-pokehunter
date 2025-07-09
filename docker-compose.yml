@@ -1,7 +1,5 @@
 # /pokehunter_fullstack/docker-compose.yml
 
-version: '3.8'
-
 services:
   # Serviço do Banco de Dados MongoDB
   mongodb:

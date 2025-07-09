@@ -1,11 +1,13 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import axios from 'axios'
+import { vi, describe, it, expect } from 'vitest'
 import SearchForm from './SearchForm'
 import type { PokemonResponse } from '../types/type'
 
+// Mock do axios
 vi.mock('axios')
-const mockedAxios = axios as unknown as { get: any }
+const mockedAxios = axios as unknown as { get: ReturnType<typeof vi.fn> }
 
 describe('SearchForm', () => {
   const mockSetResult = vi.fn()
@@ -22,16 +24,16 @@ describe('SearchForm', () => {
 
   it('calls the API and updates states', async () => {
     const mockData: PokemonResponse = {
-    city: 'Brasília',
-    temp: 35,
-    weather: 'Ensolarado',
-    isRaining: false,          
-    type: 'fogo',
-    pokemon: {
+      city: 'Brasília',
+      temp: 35,
+      weather: 'Ensolarado',
+      isRaining: false,
+      type: 'fogo',
+      pokemon: {
         name: 'Charmander',
         type: 'fogo',
         image: 'https://img.com/charmander.png',
-    },
+      },
     }
 
     mockedAxios.get.mockResolvedValueOnce({ data: mockData })

@@ -18,6 +18,8 @@ describe('HistoryList', () => {
   it('should render the history correctly', () => {
     render(<HistoryList history={historyMock} />)
 
-    expect(screen.getByText(/2025-07-07 - Belo Horizonte - 28°C - Onix \(pedra\)/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/2025-07-07 - Belo Horizonte - 28°C - Onix \(pedra\)/i)
+    ).to.exist
   })
 })
