@@ -25,7 +25,7 @@ export class PokemonService {
     const response: any = await lastValueFrom(this.httpService.get(url));
     const pokemonsList = response.data.pokemon;
 
-    if (! pokemonsList || pokemonsList.length === 0) {
+    if (!pokemonsList || pokemonsList.length === 0) {
       throw new NotFoundException(`Nenhum Pokémon do tipo ${type} encontrado na PokéAPI`);
     }
 
@@ -77,7 +77,7 @@ export class PokemonService {
         await this.getById(id);
         const updatedPokemon = await this.pokemonModel.findByIdAndUpdate({_id: id}, pokemon).exec();
         if (! updatedPokemon) {
-            throw new NotFoundException(`Não foi possível fazer o update da cidade com id ${id}`)
+            throw new NotFoundException(`Não foi possível fazer o update do pokemon com id ${id}`)
         }
         return updatedPokemon;
     }

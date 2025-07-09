@@ -15,10 +15,9 @@ const historyMock: HistoryItem[] = [
 ]
 
 describe('HistoryList', () => {
-  it('deve renderizar o histórico corretamente', () => {
+  it('should render the history correctly', () => {
     render(<HistoryList history={historyMock} />)
 
-    // Verifica se o texto do primeiro item do histórico aparece na tela
     expect(screen.getByText(/2025-07-07 - Belo Horizonte - 28°C - Onix \(pedra\)/i)).toBeInTheDocument()
   })
 })

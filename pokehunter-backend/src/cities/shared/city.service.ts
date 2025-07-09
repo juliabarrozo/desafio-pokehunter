@@ -35,7 +35,7 @@ export class CityService {
 
 
         const pokemon = await this.pokemonService.getPokemonByType(type);
-
+        console.log(pokemon)
         const newCity = await new this.cityModel({
         name: city,
         temp,

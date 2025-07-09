@@ -5,6 +5,7 @@ import { HttpService } from '@nestjs/axios';
 import { PokemonService } from 'src/pokemons/shared/pokemon.service';
 import { of } from 'rxjs';
 import { NotFoundException } from '@nestjs/common';
+import { Pokemon } from 'src/pokemons/shared/pokemon';
 
 // Mock da classe Model do Mongoose para City
 class CityModelMock {
@@ -24,6 +25,8 @@ class CityModelMock {
   static exec = jest.fn();
 }
 
+  const mockGetPokemonByType = jest.fn()
+
 describe('CityService', () => {
   let service: CityService;
 
@@ -32,8 +35,10 @@ describe('CityService', () => {
   };
 
   const mockPokemonService = {
-    getByType: jest.fn(),
+    getPokemonByType: mockGetPokemonByType,
   };
+
+
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,6 +60,13 @@ describe('CityService', () => {
 
   describe('getPokemonByCity', () => {
   it('should fetch weather, get pokemon and save city correctly', async () => {
+    const pokemon: Partial<Pokemon> = {
+      name: 'Julia',
+      type: 'humano',
+      image: '',
+      save: jest.fn()
+    }
+    mockGetPokemonByType.mockResolvedValue(pokemon)
     const cityName = 'London';
     const weatherResponse = {
       data: {
@@ -74,14 +86,14 @@ describe('CityService', () => {
       save: jest.fn().mockResolvedValue(true),
     };
 
-    mockPokemonService.getByType.mockResolvedValue(mockedPokemon);
+    mockPokemonService.getPokemonByType.mockResolvedValue(mockedPokemon);
 
     const saveCitySpy = jest.spyOn(CityModelMock.prototype, 'save');
 
     const result = await service.getPokemonByCity(cityName);
 
     expect(mockHttpService.get).toHaveBeenCalled();
-    expect(mockPokemonService.getByType).toHaveBeenCalledWith('ground');
+    expect(mockPokemonService.getPokemonByType).toHaveBeenCalledWith('ground');
     expect(saveCitySpy).toHaveBeenCalled();
     expect(mockedPokemon.save).toHaveBeenCalled();
     expect(result.typePokemon).toBe('ground');
@@ -111,14 +123,14 @@ describe('CityService', () => {
       save: jest.fn().mockResolvedValue(true),
     };
 
-    mockPokemonService.getByType.mockResolvedValue(mockedPokemon);
+    mockPokemonService.getPokemonByType.mockResolvedValue(mockedPokemon);
 
     const saveCitySpy = jest.spyOn(CityModelMock.prototype, 'save');
 
     const result = await service.getPokemonByCity(cityName);
 
     expect(mockHttpService.get).toHaveBeenCalled();
-    expect(mockPokemonService.getByType).toHaveBeenCalledWith('electric');
+    expect(mockPokemonService.getPokemonByType).toHaveBeenCalledWith('electric');
     expect(saveCitySpy).toHaveBeenCalled();
     expect(mockedPokemon.save).toHaveBeenCalled();
     expect(result.typePokemon).toBe('electric');
@@ -140,10 +152,11 @@ describe('CityService', () => {
         name: 'pikachu',
         type: 'electric',
         image: 'url-pikachu',
+        save: jest.fn()
       };
 
       mockHttpService.get.mockReturnValue(of(weatherResponse));
-      mockPokemonService.getByType.mockResolvedValue(pokemonMock);
+      mockPokemonService.getPokemonByType.mockResolvedValue(pokemonMock);
 
       const result = await service.getPokemonByCity(cityName);
 
@@ -164,10 +177,11 @@ describe('CityService', () => {
         name: 'onix',
         type: 'rock',
         image: 'url-onix',
+        save: jest.fn()
       };
 
       mockHttpService.get.mockReturnValue(of(weatherResponse));
-      mockPokemonService.getByType.mockResolvedValue(pokemonMock);
+      mockPokemonService.getPokemonByType.mockResolvedValue(pokemonMock);
 
       const result = await service.getPokemonByCity(cityName);
 

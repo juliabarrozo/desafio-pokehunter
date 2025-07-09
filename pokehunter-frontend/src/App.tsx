@@ -1,61 +1,48 @@
 import { useState } from 'react';
 import axios from 'axios';
+import AuthForm from './components/AuthForm/AuthForm'; // componente de login/cadastro
+import type { HistoryItem, PokemonResponse } from './types/type';
 import './App.css';
 
-type Pokemon = {
-  name: string;
-  image: string;
-  type: string;
-};
-
-type Response = {
-  city: string;
-  temp: number;
-  weather: string;
-  isRaining: boolean;
-  type: string;
-  pokemon: Pokemon;
-};
-
-type HistoryItem = {
-  date: string;
-  city: string;
-  temp: number;
-  weather: string;
-  pokemon: string;
-  type: string;
-};
-
 export default function App() {
+  const [token, setToken] = useState<string | null>(null);
   const [city, setCity] = useState('');
-  const [response, setResponse] = useState<Response | null>(null);
+  const [response, setResponse] = useState<PokemonResponse | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   async function getPokemonByCity() {
-  try {
-    const response = await axios.get(`http://localhost:3000/cities/pokemon/${city}`);
+    if (!token) {
+      alert('Faça login primeiro');
+      return;
+    }
 
-    setResponse(response.data);
+    try {
+      const res = await axios.get(`http://localhost:3000/cities/pokemon/${city}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // Atualiza histórico, adicionando o novo resultado com data/hora atual
-    setHistory(prev => [
-      {
-        date: new Date().toLocaleString(),
-        city: response.data.city,
-        temp: response.data.temp,
-        weather: response.data.weather,
-        pokemon: response.data.pokemon.name,
-        type: response.data.pokemon.type,
-      },
-      ...prev,
-    ]);
-  } catch (error) {
-    alert('Erro ao buscar os dados. Verifique a cidade e tente novamente.');
-    console.error(error);
+      setResponse(res.data);
+
+      setHistory(prev => [
+        {
+          date: new Date().toLocaleString(),
+          city: res.data.city,
+          temp: res.data.temp,
+          weather: res.data.weather,
+          pokemon: res.data.pokemon.name,
+          type: res.data.pokemon.type,
+        },
+        ...prev,
+      ]);
+    } catch (error) {
+      alert('Erro ao buscar os dados. Verifique a cidade e tente novamente.');
+      console.error(error);
+    }
   }
-}
 
-  // Aqui você pode implementar o fetch para a API e atualizar resultado e historico
+  if (!token) {
+    return <AuthForm onLogin={setToken} />;
+  }
 
   return (
     <div className="container">
@@ -67,10 +54,12 @@ export default function App() {
           id="cidadeInput"
           type="text"
           value={city}
-          onChange={(e) => setCity(e.target.value)}
+          onChange={e => setCity(e.target.value)}
           placeholder="Exemplo: São Paulo"
         />
-        <button type="button" onClick={getPokemonByCity}>Buscar</button>
+        <button type="button" onClick={getPokemonByCity}>
+          Buscar
+        </button>
       </div>
 
       {response && (
@@ -78,7 +67,7 @@ export default function App() {
           <p><strong>Cidade:</strong> {response.city}</p>
           <p><strong>Temperatura:</strong> {response.temp}°C</p>
           <p><strong>Clima:</strong> {response.weather}</p>
-          <p><strong>Está chovendo? </strong> {response.isRaining ? 'Sim ☔' : 'Não ☀️'} </p>
+          <p><strong>Está chovendo? </strong> {response.isRaining ? 'Sim ☔' : 'Não ☀️'}</p>
           <p><strong>Tipo do Pokémon:</strong> {response.pokemon.type}</p>
           <div className="pokemon-box">
             <img src={response.pokemon.image} alt={response.pokemon.name} />

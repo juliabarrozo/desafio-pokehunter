@@ -21,3 +21,15 @@ export type HistoryItem = {
   pokemon: string
   type: string
 }
+
+export type AuthFormProps = {
+  onLogin: React.Dispatch<React.SetStateAction<string | null>>;
+};
+
+export type RegisterFormProps = {
+  onRegister: (data: { username: string; name: string; email: string; password: string }) => void;
+};
+
+export type LoginFormProps = {
+  onLogin: React.Dispatch<React.SetStateAction<string | null>>;
+};

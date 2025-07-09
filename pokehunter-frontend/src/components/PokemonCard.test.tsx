@@ -18,7 +18,7 @@ const mockData: PokemonResponse = {
 }
 
 describe('PokemonCard', () => {
-  it('deve renderizar as informações do Pokémon corretamente', () => {
+  it('should render the Pokémon information correctly', () => {
     render(<PokemonCard data={mockData} />)
 
     expect(screen.getByText('Squirtle')).toBeInTheDocument()

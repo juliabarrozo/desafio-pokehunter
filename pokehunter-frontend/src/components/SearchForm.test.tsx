@@ -11,7 +11,7 @@ describe('SearchForm', () => {
   const mockSetResult = vi.fn()
   const mockSetHistory = vi.fn()
 
-  it('atualiza o input corretamente', () => {
+  it('updates the input correctly', () => {
     render(<SearchForm setResult={mockSetResult} setHistory={mockSetHistory} />)
 
     const input = screen.getByPlaceholderText(/digite a cidade/i)
@@ -20,12 +20,12 @@ describe('SearchForm', () => {
     expect(input).toHaveValue('Brasília')
   })
 
-  it('chama a API e atualiza estados', async () => {
-    const fakeData: PokemonResponse = {
+  it('calls the API and updates states', async () => {
+    const mockData: PokemonResponse = {
     city: 'Brasília',
     temp: 35,
     weather: 'Ensolarado',
-    isRaining: false,          // essa propriedade é obrigatória
+    isRaining: false,          
     type: 'fogo',
     pokemon: {
         name: 'Charmander',
@@ -34,7 +34,7 @@ describe('SearchForm', () => {
     },
     }
 
-    mockedAxios.get.mockResolvedValueOnce({ data: fakeData })
+    mockedAxios.get.mockResolvedValueOnce({ data: mockData })
 
     render(<SearchForm setResult={mockSetResult} setHistory={mockSetHistory} />)
 
@@ -45,7 +45,7 @@ describe('SearchForm', () => {
     fireEvent.click(button)
 
     await waitFor(() => {
-      expect(mockSetResult).toHaveBeenCalledWith(fakeData)
+      expect(mockSetResult).toHaveBeenCalledWith(mockData)
       expect(mockSetHistory).toHaveBeenCalled()
     })
   })
